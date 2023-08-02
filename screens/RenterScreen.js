@@ -1,15 +1,10 @@
-import { useState } from 'react';
-import { TextInput } from 'react-native';
-import { Button } from 'react-native';
-import { View, Text, StyleSheet } from 'react-native';
-import { auth } from '../firebaseConfig';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { TabActions } from '@react-navigation/native';
 import ListingScreen from './ListingScreen';
 import ManageScreen from './ManageScreen';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
 
 
 const Tab = createBottomTabNavigator();
@@ -20,10 +15,27 @@ const RenterScreen = ({ navigation, route }) => {
 
     return (
 
-            <Tab.Navigator>
-                <Tab.Screen options={{ headerShown: false, }} name="Car List" component={ListingScreen} />
-                <Tab.Screen name="Manage" component={ManageScreen} />
-            </Tab.Navigator>
+        <Tab.Navigator>
+            <Tab.Screen
+                options={{
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="car" size={size} color={color} />
+                    )
+                }}
+                name="Car List"
+                component={ListingScreen} />
+
+            <Tab.Screen
+                options={{
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="list-outline" size={size} color={color} />
+                    )
+                }}
+                name="Manage"
+                component={ManageScreen} />
+        </Tab.Navigator>
 
     )
 }

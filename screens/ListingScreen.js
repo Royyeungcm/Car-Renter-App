@@ -1,14 +1,8 @@
-import { Button, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
-import { Image, View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MapView, { Marker, Callout } from "react-native-maps";
-
-
 import { auth, db } from "../firebaseConfig";
-
-
-import { setDoc, doc, Firestore, getDocs, collection, getDoc } from "firebase/firestore";
-
+import { doc, getDocs, collection, getDoc, updateDoc, addDoc } from "firebase/firestore";
 import 'firebase/firestore';
 
 
@@ -17,14 +11,15 @@ const ListingScreen = ({ navigation, route }) => {
     const [ownerList, setOwnerList] = useState([]);
     const [availableCarList, setAvailableCarList] = useState([]);
     const [isLoading, setLoading] = useState(true);
+    const [currentUserName, setCurrentUserName] = useState("")
 
 
     const colRef = collection(db, "OwnerProfiles");
 
     useEffect(() => {
         emptyBothList();
-        console.log("Getting the owners.");
         getAllOwners();
+        getUserName();
     }, [])
 
     const emptyBothList = () => {
@@ -36,11 +31,8 @@ const ListingScreen = ({ navigation, route }) => {
         try {
             const docsSnap = await getDocs(colRef);
             docsSnap.forEach(doc => {
-                // console.log(doc.data());
-                console.log(doc.id);
                 ownerList.push(doc.id);
             })
-            console.log(`The all owners are: ${ownerList}`)
             ownerList.forEach((currentOwner) => {
                 getAllCars(currentOwner)
             })
@@ -55,59 +47,81 @@ const ListingScreen = ({ navigation, route }) => {
         try {
             const docsSnap = await getDocs(colRefAllOwners);
             docsSnap.forEach(doc => {
-                console.log(doc.data());
                 if (doc.data().status !== "Approved") {
-                    // availableCarList.push(doc.data())
-                    setAvailableCarList((prevList) => [...prevList, doc.data()])
+                    const newList = doc.data()
+                    newList.id = doc.id
+                    setAvailableCarList((car) => [...car, newList])
+
                 }
             })
-            console.log(`Total available cars: ${availableCarList.length}`)
-            checking();
         } catch (error) {
             console.log(error);
         }
     }
 
-    const checking = () => {
-        console.log(`Pressed`)
-        console.log(availableCarList.length)
-        availableCarList.forEach((currItem) => {
-            console.log(`${currItem.lat} , ${currItem.lon}`)
-        })
+    const getUserName = async () => {
+        console.log(auth.currentUser.uid)
+        try {
+            const querySnapshot = await getDoc(doc(db, "UserProfiles", auth.currentUser.uid));
+            console.log(querySnapshot.exists())
+            console.log(querySnapshot.data().name)
+            setCurrentUserName(querySnapshot.data().name)
+        } catch (error) {
+            console.log("Error getting name: ", error)
+        }
     }
 
-    const getUserName = () => {
-        
-    }
 
-
-    const onCalloutPressed = (currItem) => {
-        console.log(`Pressed`)
+    const onCalloutPressed = async (currItem) => {
+        console.log(currItem)
+        console.log(currItem.id)
         const currentDate = new Date();
-        console.log(currentDate)
         const randomMilliseconds = Math.floor(Math.random() * 90 * 24 * 60 * 60 * 1000);
         const futureDate = new Date(currentDate.getTime() + randomMilliseconds);
-        console.log(futureDate)
+        const shortFutureDate = futureDate.toDateString()
+        console.log(shortFutureDate)
 
         const waitingListDataToBeAdded = {
             confirmationCode: "",
-            data: futureDate,
+            data: shortFutureDate,
             id: auth.currentUser.uid,
-
+            name: currentUserName
         }
 
+        let newList = currItem.waitingList
+        newList.push(waitingListDataToBeAdded)
+        console.log(newList)
 
-        
 
+        try {
+            const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
+            const docSnapshot = await updateDoc(docRef, { waitingList: newList });
+        } catch (err) {
+            console.log('Pushing error:', err)
+        }
 
+        const reservedToBeAdded = {
+            CarID: currItem.id,
+            confirmationCode: "",
+            status: "Needs Approval"
+        }
+
+        try {
+            const docRef = collection(db, "UserProfiles", auth.currentUser.uid, "Reserved")
+            const docSnapshot = await addDoc(docRef, reservedToBeAdded)
+        } catch (err) {
+            console.log('Addeding reserved:', err)
+        }
+
+        alert("You have sent the request to the owner!")
     }
 
 
-    if (isLoading == false) {
+    if (!isLoading) {
         return (
-            <View>
+            <View style={styles.container}>
                 <MapView
-                    style={{ height: "100%", width: "100%" }}
+                    style={styles.map}
                     initialRegion={{
                         latitude: 43.6532,
                         longitude: -79.3832,
@@ -115,97 +129,77 @@ const ListingScreen = ({ navigation, route }) => {
                         longitudeDelta: 0.0421,
                     }}
                 >
-                    {
-                        availableCarList.map(
-                            (currItem, pos) => {
-                                const coords = {
-                                    latitude: parseFloat(currItem.lat),
-                                    longitude: parseFloat(currItem.lon)
-                                }
-
-                                return (
-                                    <Marker
-                                        key={pos}
-                                        coordinate={coords}
-                                        onCalloutPress={onCalloutPressed(currItem)}
-                                    >
-                                        <View style={styles.priceTagBorder}>
-                                            <Text style={styles.priceTag}>${currItem.price}</Text>
-                                        </View>
-                                        <Callout>
-                                            <View style={styles.calloutBox}>
-                                                <Image
-                                                    source={{ uri: currItem.photos[0].photoURL }}
-                                                    style={{ width: "100%", height: 200 }}
-                                                    resizeMode="cover"
-                                                />
-                                                <Text>Brand: {currItem.brand}</Text>
-                                                <Text>Model: {currItem.model}</Text>
-                                                <Text>Price: ${currItem.price}</Text>
-                                                <Text>Press this box to book it!</Text>
-                                            </View>
-                                        </Callout>
-                                    </Marker>
-                                )
-                            }
-                        )
-                    }
+                    {availableCarList.map((currItem, pos) => (
+                        <Marker key={pos} coordinate={{ latitude: parseFloat(currItem.lat), longitude: parseFloat(currItem.lon) }}>
+                            <View style={styles.priceTagBorder}>
+                                <Text style={styles.priceTag}>${currItem.price}</Text>
+                            </View>
+                            <Callout onPress={() => onCalloutPressed(currItem)}>
+                                <View style={styles.calloutBox}>
+                                    <Image source={{ uri: currItem.photos[0].photoURL }} style={styles.carImage} resizeMode="cover" />
+                                    <Text style={styles.carInfo}>Brand: {currItem.brand}</Text>
+                                    <Text style={styles.carInfo}>Model: {currItem.model}</Text>
+                                    <Text style={styles.carInfo}>Price: ${currItem.price}</Text>
+                                    <TouchableOpacity style={styles.bookButton} onPress={() => onCalloutPressed(currItem)}>
+                                        <Text style={styles.buttonText}>Book Now</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Callout>
+                        </Marker>
+                    ))}
                 </MapView>
             </View>
         );
     } else {
         return (
-            <View>
+            <View style={styles.container}>
                 <Text>LOADING...</Text>
             </View>
-
-        )
+        );
     }
-
-}
+};
 
 const styles = StyleSheet.create({
-    inputStyle: {
-        height: 50,
-        margin: 8,
-        borderColor: 'black',
-        borderWidth: 1,
-        padding: 5,
+    container: {
+        flex: 1,
     },
-    tb: {
-        width: "100%",
-        borderRadius: 5,
-        backgroundColor: "#efefef",
-        color: "#333",
-        fontWeight: "bold",
-        paddingHorizontal: 10,
-        paddingVertical: 15,
-        marginVertical: 10,
-    },
-    priceTag: {
-        fontWeight: "bold",
+    map: {
+        flex: 1,
     },
     priceTagBorder: {
         width: 60,
         height: 30,
         borderRadius: 10,
-        backgroundColor: "white",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    calloutContainer: {
-        width: 200,
-        padding: 16,
         backgroundColor: 'white',
-        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    priceTag: {
+        fontWeight: 'bold',
     },
     calloutBox: {
         width: 300,
-        zIndex: 1,
-    }
+    },
+    carImage: {
+        width: '100%',
+        height: 200,
+        marginBottom: 10,
+    },
+    carInfo: {
+        marginBottom: 5,
+    },
+    bookButton: {
+        backgroundColor: 'blue',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
 });
 
 export default ListingScreen;
-
-
-
