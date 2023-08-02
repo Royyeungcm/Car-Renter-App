@@ -1,6 +1,4 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import SignInScreen from './screens/SignInScreen';
@@ -13,7 +11,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouterName='Sign In'>
         <Stack.Screen component={SignInScreen} name="Sign In"></Stack.Screen>
-        <Stack.Screen component={RenterScreen} name="Renter"></Stack.Screen>
+        <Stack.Screen component={RenterScreen} name="ABC Car Inc."></Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -61,11 +61,15 @@ export default function ManageScreen() {
 
   const renderCarItem = ({ item }) => (
     <TouchableOpacity style={styles.carItem}>
-      <Text style={styles.carBrand}>{item.brand}</Text>
+      <Text style={styles.carBrand}>{item.brand} {item.model}</Text>
+      <Text style={styles.carInfo}>Booking date: </Text>
       <Text style={styles.carInfo}>License Plate: {item.licensePlate}</Text>
       <Text style={styles.carInfo}>Pickup Location: {item.street}</Text>
       <Text style={styles.carInfo}>Price: ${item.price}</Text>
       <Text style={styles.carInfo}>Owner: </Text>
+      <Text style={styles.carInfo}>Status: </Text>
+      <Text style={styles.carInfo}>Confirmation Code: </Text>
+
       {/* Additional information can be added here */}
     </TouchableOpacity>
   );

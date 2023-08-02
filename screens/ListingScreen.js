@@ -4,6 +4,7 @@ import MapView, { Marker, Callout } from "react-native-maps";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDocs, collection, getDoc, updateDoc, addDoc } from "firebase/firestore";
 import 'firebase/firestore';
+import * as Location from 'expo-location';
 
 
 const ListingScreen = ({ navigation, route }) => {
@@ -11,12 +12,16 @@ const ListingScreen = ({ navigation, route }) => {
     const [ownerList, setOwnerList] = useState([]);
     const [availableCarList, setAvailableCarList] = useState([]);
     const [isLoading, setLoading] = useState(true);
-    const [currentUserName, setCurrentUserName] = useState("")
+    const [currentUserName, setCurrentUserName] = useState("");
+    const [deviceLat, setDeviceLat] = useState();
+    const [deviceLng, setDeviceLng] = useState();
+
 
 
     const colRef = collection(db, "OwnerProfiles");
 
     useEffect(() => {
+        getCurrentLocation();
         emptyBothList();
         getAllOwners();
         getUserName();
@@ -26,6 +31,24 @@ const ListingScreen = ({ navigation, route }) => {
         setOwnerList([]);
         setAvailableCarList([]);
     }
+
+    const getCurrentLocation = async () => {
+        try {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                alert(`Permission to access location was denied`)
+                return
+            }
+            let location =
+                await Location.getCurrentPositionAsync();
+            setDeviceLat(location.coords.latitude)
+            setDeviceLng(location.coords.longitude)
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+
 
     const getAllOwners = async () => {
         try {
