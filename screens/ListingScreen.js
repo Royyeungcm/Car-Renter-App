@@ -126,7 +126,9 @@ const ListingScreen = ({ navigation, route }) => {
         const reservedToBeAdded = {
             CarID: currItem.id,
             confirmationCode: "",
-            status: "Needs Approval"
+            status: "Needs Approval",
+            OwnerID: currItem.ownerID,
+            data: shortFutureDate,
         }
 
         try {
