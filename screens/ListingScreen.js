@@ -115,12 +115,20 @@ const ListingScreen = ({ navigation, route }) => {
         newList.push(waitingListDataToBeAdded)
         console.log(newList)
 
-
-        try {
-            const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
-            const docSnapshot = await updateDoc(docRef, { waitingList: newList });
-        } catch (err) {
-            console.log('Pushing error:', err)
+        if (currItem.status == "idle"){
+            try {
+                const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
+                const docSnapshot = await updateDoc(docRef, { waitingList: newList, st, status: "Needs Approval" });
+            } catch (err) {
+                console.log('Pushing error:', err)
+            }
+        }else{
+            try {
+                const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
+                const docSnapshot = await updateDoc(docRef, { waitingList: newList, st });
+            } catch (err) {
+                console.log('Pushing error:', err)
+            }
         }
 
         const reservedToBeAdded = {
