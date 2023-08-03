@@ -106,7 +106,7 @@ const ListingScreen = ({ navigation, route }) => {
 
         const waitingListDataToBeAdded = {
             confirmationCode: "",
-            data: shortFutureDate,
+            date: shortFutureDate,
             id: auth.currentUser.uid,
             name: currentUserName
         }
@@ -126,9 +126,9 @@ const ListingScreen = ({ navigation, route }) => {
         const reservedToBeAdded = {
             CarID: currItem.id,
             confirmationCode: "",
-            status: "Needs Approval",
+            status: "pending",
             OwnerID: currItem.ownerID,
-            data: shortFutureDate,
+            date: shortFutureDate,
         }
 
         try {

@@ -7,35 +7,39 @@ import {
     TouchableOpacity,
 } from "react-native";
 import { auth, db } from "../firebaseConfig";
-import { getDocs, collection, getDoc, doc } from "firebase/firestore";
+import {
+    getDocs,
+    collection,
+    getDoc,
+    doc,
+    onSnapshot,
+} from "firebase/firestore";
+
+let unsub;
 
 export default function ManageScreen() {
     const [bookings, setBookings] = useState([]);
     const [reservedDetailsList, setReservedDetailsList] = useState();
     const [currentUserName, setCurrentUserName] = useState("");
 
-    const bo = [];
+    let reservedDetails = [];
+
 
     const fetchCurrentUserRequest = async () => {
+        setReservedDetailsList((a) => []);
+        setBookings((b) => []);
+        reservedDetails = [];
         try {
             const querySnapshot = await getDocs(
                 collection(db, "UserProfiles", auth.currentUser.uid, "Reserved")
             );
-            // const currentUserRequest = querySnapshot.docs.map(
-            //     (doc) => {doc.data().CarID}
-            // );
+
 
             querySnapshot.forEach((doc) => {
-                // console.log(doc.data());
-                bo.push(doc.data());
                 bookings.push(doc.data());
-                // setBookings((b)=>[...b, doc.data()])
-            });
-            // console.log("bo", bo);
-            // console.log("bookings", bookings);
-            // setBookings(currentUserRequest);
 
-            const reservedDetails = [];
+            });
+
 
             for (const item of bookings) {
                 const documentRef = doc(
@@ -47,14 +51,17 @@ export default function ManageScreen() {
                 );
                 const snapShot = await getDoc(documentRef);
                 if (snapShot.exists) {
-					const addDate = snapShot.data()
-					addDate.date = item.data
+                    const addDate = snapShot.data();
+                    addDate.date = item.date;
+                    addDate.carID = item.CarID;
+                    addDate.userStatus = item.status;
+                    addDate.confirmationCode = item.confirmationCode;
                     reservedDetails.push(addDate);
                 }
             }
             setReservedDetailsList(reservedDetails);
-			console.log("reservedDetails: ", reservedDetails)
-            // fetchRequestedCarDetails();
+            console.log("reservedDetails: ", reservedDetails);
+
         } catch (error) {
             console.log("Error fetching requests: ", error);
         }
@@ -63,6 +70,53 @@ export default function ManageScreen() {
     useEffect(() => {
         getUserName();
         fetchCurrentUserRequest();
+    }, []);
+
+    useEffect(() => {
+        unsub = onSnapshot(
+            collection(db, `UserProfiles/${auth.currentUser.uid}/Reserved`),
+            (snapshot) => {
+                console.log("active");
+
+                snapshot.docChanges().forEach((change) => {
+                    const statusChanged = change.doc.data();
+                    statusChanged.id = change.doc.id;
+                    if (change.type === "added") {
+                        console.log("New ", change.doc.id);
+
+                    }
+                    if (change.type === "modified") {
+                        console.log("Modified ", change.doc.id);
+
+                        let target = reservedDetails.filter((a)=>{
+                            if(a.carID == change.doc.data().CarID && a.date == change.doc.data().date){
+                                return a;
+                            }
+                        }) 
+
+                        const m = reservedDetails.filter((a)=>{
+                            if(!(a.carID == change.doc.data().CarID && a.date == change.doc.data().date)){
+                                return a;
+                            }
+                        })
+                        target[0].userStatus = change.doc.data().status
+                        target[0].confirmationCode = change.doc.data().confirmationCode
+                        m.push(target[0])
+                        setReservedDetailsList(m)
+
+                    }
+                    if (change.type === "removed") {
+                        console.log("Removed ", change.doc.id);
+
+                    }
+
+                });
+            }
+        );
+        return () => {
+            console.log("unmounted");
+            unsub();
+        };
     }, []);
 
     const getUserName = async () => {
@@ -77,37 +131,6 @@ export default function ManageScreen() {
             console.log("Error getting name: ", error);
         }
     };
-
-    // const fetchRequestedCarDetails = async () => {
-    //     try {
-    //         const docsSnap = await getDocs(collection(db, "OwnerProfiles"));
-    //         const ownerList = docsSnap.docs.map((doc) => doc.id);
-    //         const reservedDetails = [];
-
-    //         for (const currentOwner of ownerList) {
-    //             for (const currCar of bookings) {
-    // const documentRef = doc(
-    //     db,
-    //     "OwnerProfiles",
-    //     currentOwner,
-    //     "Listing",
-    //     currCar
-    // );
-    //                 const documentSnapshot = await getDoc(documentRef);
-    //                 const documentData = documentSnapshot.data();
-
-    //                 if (documentSnapshot.exists()) {
-    //                     reservedDetails.push(documentData);
-    //                 }
-    //                 console.log(reservedDetailsList);
-    //             }
-    //         }
-
-    //         setReservedDetailsList(reservedDetails);
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // };
 
     const getItemDate = (currItem) => {
         const i = currItem.waitingList.filter((currItem) => {
@@ -124,9 +147,7 @@ export default function ManageScreen() {
                 <Text style={styles.carBrand}>
                     {item.brand} {item.model}
                 </Text>
-                <Text style={styles.carInfo}>
-                    Booking date: {item.date}
-                </Text>
+                <Text style={styles.carInfo}>Booking date: {item.date}</Text>
                 <Text style={styles.carInfo}>
                     License Plate: {item.licensePlate}
                 </Text>
@@ -136,8 +157,8 @@ export default function ManageScreen() {
                 <Text style={styles.carInfo}>Price: ${item.price}</Text>
                 <Text style={styles.carInfo}>Owner: {item.ownerName}</Text>
                 {/* <Image/> */}
-                <Text style={styles.carInfo}>Status: </Text>
-                <Text style={styles.carInfo}>Confirmation Code: </Text>
+                <Text style={styles.carInfo}>Status: {item.userStatus}</Text>
+                <Text style={styles.carInfo}>Confirmation Code: {item.confirmationCode}</Text>
             </View>
         );
     };
