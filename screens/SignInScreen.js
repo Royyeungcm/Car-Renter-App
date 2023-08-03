@@ -14,7 +14,7 @@ const SignInScreen = ({ navigation }) => {
             const userCredential = await signInWithEmailAndPassword(auth, userEmail, userPassword);
             console.log(auth.currentUser);
             alert(`Login success!`);
-            navigation.navigate('ABC Car Inc.');
+            navigation.navigate('Group 6 Car Inc.');
         } catch (err) {
             console.log(err);
         }
@@ -22,7 +22,7 @@ const SignInScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>ABC Car Inc.</Text>
+            <Text style={styles.title}>Group 6 Car Inc.</Text>
             <Text style={styles.subtitle}>Renter</Text>
 
             <TextInput

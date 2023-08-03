@@ -11,7 +11,9 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouterName='Sign In'>
         <Stack.Screen component={SignInScreen} name="Sign In"></Stack.Screen>
-        <Stack.Screen component={RenterScreen} name="ABC Car Inc."></Stack.Screen>
+        <Stack.Screen options={{
+          headerShown: false,
+        }} component={RenterScreen} name="Group 6 Car Inc."></Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

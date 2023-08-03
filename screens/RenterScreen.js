@@ -18,7 +18,7 @@ const RenterScreen = ({ navigation, route }) => {
         <Tab.Navigator>
             <Tab.Screen
                 options={{
-                    headerShown: false,
+                    headerShown: true,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="car" size={size} color={color} />
                     )
@@ -28,7 +28,7 @@ const RenterScreen = ({ navigation, route }) => {
 
             <Tab.Screen
                 options={{
-                    headerShown: false,
+                    headerShown: true,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="list-outline" size={size} color={color} />
                     )

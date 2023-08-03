@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Image, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import MapView, { Marker, Callout } from "react-native-maps";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDocs, collection, getDoc, updateDoc, addDoc } from "firebase/firestore";
 import 'firebase/firestore';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 
 
 const ListingScreen = ({ navigation, route }) => {
@@ -16,13 +17,25 @@ const ListingScreen = ({ navigation, route }) => {
     const [deviceLat, setDeviceLat] = useState();
     const [deviceLng, setDeviceLng] = useState();
 
+    navigation.setOptions({
+        headerRight: () => (
+            <Pressable onPress={() => { getAllOwners(); }} >
+                <Ionicons name="repeat" size={32} color="blue" style={{ marginRight: 10 }} />
+            </Pressable>),
+        title: "Group 6 Car Inc.",
 
+        headerLeft: () => (
+            <Pressable onPress={() => { navigation.goBack(); }}>
+                <Ionicons name="return-down-back" size={32} color="blue" style={{ marginRight: 10, marginLeft: 20 }} />
+            </Pressable>
+        ),
+        title: "Group 6 Car Inc.",
+    });
 
     const colRef = collection(db, "OwnerProfiles");
 
     useEffect(() => {
         getCurrentLocation();
-        emptyBothList();
         getAllOwners();
         getUserName();
     }, [])
@@ -51,6 +64,7 @@ const ListingScreen = ({ navigation, route }) => {
 
 
     const getAllOwners = async () => {
+        emptyBothList();
         try {
             const docsSnap = await getDocs(colRef);
             docsSnap.forEach(doc => {
@@ -115,17 +129,17 @@ const ListingScreen = ({ navigation, route }) => {
         newList.push(waitingListDataToBeAdded)
         console.log(newList)
 
-        if (currItem.status == "idle"){
+        if (currItem.status == "idle") {
             try {
                 const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
-                const docSnapshot = await updateDoc(docRef, { waitingList: newList, st, status: "Needs Approval" });
+                const docSnapshot = await updateDoc(docRef, { waitingList: newList, status: "Needs Approval" });
             } catch (err) {
                 console.log('Pushing error:', err)
             }
-        }else{
+        } else {
             try {
                 const docRef = doc(db, "OwnerProfiles", currItem.ownerID, "Listing", currItem.id)
-                const docSnapshot = await updateDoc(docRef, { waitingList: newList, st });
+                const docSnapshot = await updateDoc(docRef, { waitingList: newList });
             } catch (err) {
                 console.log('Pushing error:', err)
             }
