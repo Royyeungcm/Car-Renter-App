@@ -35,7 +35,7 @@ const ListingScreen = ({ navigation, route }) => {
     const colRef = collection(db, "OwnerProfiles");
 
     useEffect(() => {
-        getCurrentLocation();
+        // getCurrentLocation();
         getAllOwners();
         getUserName();
     }, [])
@@ -56,6 +56,7 @@ const ListingScreen = ({ navigation, route }) => {
                 await Location.getCurrentPositionAsync();
             setDeviceLat(location.coords.latitude)
             setDeviceLng(location.coords.longitude)
+            setLoading(false)
         } catch (err) {
             console.log(err)
         }
@@ -64,6 +65,7 @@ const ListingScreen = ({ navigation, route }) => {
 
 
     const getAllOwners = async () => {
+        getCurrentLocation();
         emptyBothList();
         try {
             const docsSnap = await getDocs(colRef);
@@ -76,7 +78,6 @@ const ListingScreen = ({ navigation, route }) => {
         } catch (error) {
             console.log(error);
         }
-        setLoading(false)
     }
 
     const getAllCars = async (currentOwner) => {
@@ -170,8 +171,8 @@ const ListingScreen = ({ navigation, route }) => {
                 <MapView
                     style={styles.map}
                     initialRegion={{
-                        latitude: 43.6532,
-                        longitude: -79.3832,
+                        latitude: deviceLat,
+                        longitude: deviceLng,
                         latitudeDelta: 0.0922,
                         longitudeDelta: 0.0421,
                     }}
