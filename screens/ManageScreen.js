@@ -50,6 +50,7 @@ export default function ManageScreen() {
           if (documentSnapshot.exists()) {
             reservedDetails.push(documentData);
           }
+          console.log(reservedDetailsList)
         }
       }
 
