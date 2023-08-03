@@ -5,8 +5,10 @@ import { getDocs, collection, getDoc, doc } from 'firebase/firestore';
 
 export default function ManageScreen() {
   const [bookings, setBookings] = useState([]);
-  const [reservedDetailsList, setReservedDetailsList] = useState([]);
+  const [reservedDetailsList, setReservedDetailsList] = useState();
   const [currentUserName, setCurrentUserName] = useState('');
+
+
 
   useEffect(() => {
     getUserName();
@@ -60,19 +62,26 @@ export default function ManageScreen() {
     }
   };
 
+  const getItemDate = (currItem) => {
+    const i = currItem.waitingList.filter((currItem)=>{
+      if (currItem.name == currentUserName){
+          return currItem
+      }
+  })
+  }
+
   const renderCarItem = ({ item }) => (
-    <TouchableOpacity style={styles.carItem}>
+    <View style={styles.carItem}>
       <Text style={styles.carBrand}>{item.brand} {item.model}</Text>
-      <Text style={styles.carInfo}>Booking date: </Text>
+      <Text style={styles.carInfo}>Booking date: {getItemDate(item)}</Text>
       <Text style={styles.carInfo}>License Plate: {item.licensePlate}</Text>
       <Text style={styles.carInfo}>Pickup Location: {item.street}</Text>
       <Text style={styles.carInfo}>Price: ${item.price}</Text>
-      <Text style={styles.carInfo}>Owner: </Text>
+      <Text style={styles.carInfo}>Owner: {item.ownerName}</Text>
+      {/* <Image/> */}
       <Text style={styles.carInfo}>Status: </Text>
       <Text style={styles.carInfo}>Confirmation Code: </Text>
-
-      {/* Additional information can be added here */}
-    </TouchableOpacity>
+    </View>
   );
 
   return (
